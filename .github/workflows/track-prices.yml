@@ -1,0 +1,37 @@
+name: Track KSP prices
+
+on:
+  schedule:
+    - cron: '17 5,15 * * *'   # twice a day: ~08:17 and ~18:17 Israel time
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['tracker/**', '.github/workflows/track-prices.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: track-prices
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read KSP prices
+        run: node tracker/ksp.mjs
+      - name: Save price history
+        if: always()
+        run: |
+          git config user.name "price-tracker"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/ksp-history.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Update KSP prices"
+          git pull --rebase origin main
+          git push
