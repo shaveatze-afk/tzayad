@@ -104,6 +104,7 @@ h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:4px 0;line-height
 .spark{width:100%;height:56px;display:block}
 .tact{display:flex;gap:6px 16px;flex-wrap:wrap;align-items:center}
 .tact .field{flex:0 1 190px;height:36px;border-radius:10px}
+h2.sub{font-size:20px;font-weight:800;margin:26px 0 2px}
 .empty{padding:28px 18px;border-radius:16px;background:var(--bg2);color:var(--muted);text-align:center}
 .foot{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px;font-size:13px}
 @media (max-width:380px){ h1{font-size:24px} .card{grid-template-columns:68px 1fr} .card img,.ph{width:68px;height:68px} }
@@ -147,6 +148,9 @@ h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:4px 0;line-height
     </div>
     <p class="lead">המחיר הזול ביותר עד הדלת לכל חיפוש. נבדק אוטומטית כשהעמוד פתוח, אם עברו יותר מ-3 שעות מהבדיקה האחרונה.</p>
     <div id="tout"></div>
+    <h2 class="sub">KSP</h2>
+    <p class="lead">מוצרים מ-KSP נבדקים אוטומטית פעמיים ביום, גם כשהעמוד סגור. המחיר הוא מחיר האתר, בלי משלוח.</p>
+    <div id="kout"><div class="empty">טוען נתונים מ-KSP…</div></div>
     <div class="foot">
       <button class="link" id="exportBtn" type="button">שמור גיבוי לקובץ</button>
       <label class="link" for="importFile" style="cursor:pointer">שחזר מגיבוי</label>
@@ -427,6 +431,46 @@ $('#tout').addEventListener('change', (e) => {
   it.target = Number(e.target.value) || null; save(); renderTracked();
 });
 
+/* ---------- KSP (filled twice a day by the GitHub job into data/ksp-history.json) ---------- */
+let kspLoaded = false;
+async function loadKsp() {
+  let d;
+  try {
+    const r = await fetch('data/ksp-history.json?ts=' + Date.now(), { cache: 'no-store' });
+    if (r.status === 404) { $('#kout').innerHTML = '<div class="empty">הבדיקה הראשונה של KSP עוד לא רצה. המחירים יופיעו כאן אחריה.</div>'; return; }
+    if (!r.ok) throw 0;
+    d = await r.json();
+  } catch { $('#kout').innerHTML = '<div class="err">לא הצלחתי לטעון את נתוני KSP. נסה לרענן.</div>'; return; }
+  kspLoaded = true;
+  const items = Object.values(d.items || {});
+  if (!items.length) { $('#kout').innerHTML = '<div class="empty">אין מוצרי KSP במעקב.</div>'; return; }
+  $('#kout').innerHTML = '<div class="list">' + items.map((it) => {
+    const pts = (it.history || []).map((h) => ({ t: Date.parse(h.t), best: h.price }));
+    const now = pts.at(-1), prev = pts.length > 1 ? pts.at(-2) : null, first = pts[0];
+    const low = pts.length ? Math.min(...pts.map((p) => p.best)) : null;
+    let change = '';
+    if (now && prev) {
+      const dlt = now.best - prev.best;
+      change = dlt === 0 ? '<span>ללא שינוי מהבדיקה הקודמת</span>' : `<span class="${dlt < 0 ? 'down' : 'up'}">${dlt < 0 ? '▼' : '▲'} ${ils(Math.abs(dlt))} מהבדיקה הקודמת</span>`;
+    }
+    return `<article class="tcard">
+      <div class="ttop">
+        <div class="tq" dir="auto">${esc(it.name || 'מוצר ' + it.id)}</div>
+        <div class="tnow num">${now ? ils(now.best) : '—'}</div>
+      </div>
+      <div class="tstats num">
+        ${change}
+        ${low != null ? `<span>הכי נמוך: <b>${ils(low)}</b></span>` : ''}
+        ${first && first !== now ? `<span>בהתחלה: <b>${ils(first.best)}</b></span>` : ''}
+      </div>
+      ${spark(pts)}
+      ${it.lastError ? `<div class="meta up">הבדיקה האחרונה נכשלה (${fmtTime(it.lastError.t)})</div>` : ''}
+      <div class="meta">${now ? `נבדק ${ago(now.t)} · ${pts.length} בדיקות` : 'עוד לא נבדק'}</div>
+      <div class="tact"><a class="link" href="${esc(it.url)}" target="_blank" rel="noopener">לעמוד המוצר ב-KSP ←</a></div>
+    </article>`;
+  }).join('') + '</div>';
+}
+
 /* ---------- backup ---------- */
 $('#exportBtn').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(store, null, 1)], { type: 'application/json' });
@@ -452,7 +496,7 @@ function show(view) {
   $('#view-search').hidden = v !== 'search'; $('#view-track').hidden = v !== 'track';
   document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.view === v)));
   if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v);
-  if (v === 'track') { renderTracked(); autoCheck(); }
+  if (v === 'track') { renderTracked(); autoCheck(); if (!kspLoaded) loadKsp(); }
 }
 document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => show(t.dataset.view)));
 window.addEventListener('hashchange', () => show(location.hash.slice(1)));
