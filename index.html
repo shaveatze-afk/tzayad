@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>צייד</title>
+<meta name="description" content="חיפוש מוצרים ב-eBay עם מחיר סופי עד הדלת בישראל, ומעקב אחרי שינויי מחיר.">
+<meta name="theme-color" content="#0A7F59">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: one narrow column, two tabs (search / tracked). Tokens below. */
+:root{
+  --bg:#FFFFFF; --bg2:#F4F6F5; --fill:#ECEFEE; --text:#1B1F1D; --muted:#66706B; --faint:#A9B1AD;
+  --sep:rgba(40,60,50,.14); --accent:#0A7F59; --brand:#0A7F59; --brand-soft:#E3F5EE;
+  --good:#1E7F3A; --bad:#C4231B; --warn:#A04A00; --warn-soft:#FFF3E3; --card:#FFFFFF;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05);
+  --font:"Heebo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0B0D0C; --bg2:#161A18; --fill:#222826; --text:#EEF2F0; --muted:#9AA39F; --faint:#5C6560;
+    --sep:rgba(160,180,170,.18); --accent:#34D399; --brand:#13A472; --brand-soft:rgba(52,211,153,.14);
+    --good:#4ADE80; --bad:#FF6B61; --warn:#FBBF5A; --warn-soft:rgba(251,191,90,.12); --card:#161A18; --shadow:none;
+    color-scheme:dark;
+  }
+}
+*,*::before,*::after{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+[hidden]{display:none!important}
+.app{max-width:600px;margin:0 auto;padding-block:10px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.num{font-variant-numeric:tabular-nums}
+.bar{display:flex;align-items:center;gap:8px;padding:6px 0}
+.appicon{width:30px;height:30px;border-radius:8px;background:linear-gradient(140deg,#1CCB8B,#0B8A62);display:flex;align-items:center;justify-content:center;color:#fff}
+.appicon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.logo{font-weight:800;font-size:18px}
+.src{margin-inline-start:auto;font-size:12px;font-weight:600;color:var(--accent);background:var(--brand-soft);padding:4px 10px;border-radius:99px}
+.tabs{display:flex;gap:4px;background:var(--fill);border-radius:12px;padding:4px;margin:10px 0 16px}
+.tab{flex:1;border:0;background:transparent;border-radius:9px;height:38px;font-weight:600;font-size:15px;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+.tab .count{display:inline-block;min-width:20px;padding:0 6px;margin-inline-start:4px;border-radius:99px;background:var(--brand);color:#fff;font-size:12px;line-height:20px}
+h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:4px 0;line-height:1.15;text-wrap:balance}
+.lead{color:var(--muted);margin:0 0 14px}
+.form{display:grid;gap:10px}
+.search{display:flex;align-items:center;gap:8px;background:var(--fill);border-radius:12px;padding:0 12px;height:50px}
+.search input{flex:1;min-width:0;border:0;background:transparent;font-size:17px;outline:none;height:100%}
+.search svg{width:20px;height:20px;stroke:var(--muted);fill:none;stroke-width:1.8;flex:none}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.field{flex:1 1 200px;display:flex;align-items:center;gap:6px;background:var(--fill);border-radius:12px;padding:0 12px;height:46px;min-width:0}
+.field span{color:var(--muted);font-size:14px;white-space:nowrap}
+.field input{flex:1;min-width:0;border:0;background:transparent;outline:none;font-size:16px}
+.btn{border:0;height:50px;border-radius:12px;background:var(--brand);color:#fff;font-weight:700;font-size:17px;padding:0 18px}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.sec{background:var(--brand-soft);color:var(--accent)}
+.btn.small{height:36px;font-size:14px;border-radius:10px;padding:0 12px}
+.link{border:0;background:none;padding:6px 0;color:var(--accent);font-weight:600;font-size:14px;text-decoration:none}
+.link.danger{color:var(--bad)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.chip{border:1px solid var(--sep);background:var(--card);border-radius:99px;padding:6px 12px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.summary{margin:16px 0 6px;padding:16px;border-radius:16px;background:var(--bg2);display:grid;gap:4px}
+.big{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.verdict{font-weight:600}
+.ok{color:var(--good)} .far{color:var(--warn)} .up{color:var(--bad)} .down{color:var(--good)}
+.meta{color:var(--muted);font-size:13px}
+.sumrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.list{display:grid;gap:12px;margin-top:14px}
+.card{display:grid;grid-template-columns:84px 1fr;gap:12px;padding:12px;border-radius:16px;background:var(--card);box-shadow:var(--shadow);border:1px solid var(--sep)}
+.card > div{min-width:0}
+.card img{width:84px;height:84px;object-fit:contain;border-radius:10px;background:#fff}
+.ph{width:84px;height:84px;border-radius:10px;background:var(--fill)}
+.t{font-size:14px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;direction:ltr;text-align:left}
+.price{font-size:22px;font-weight:800;margin-top:4px}
+.bd{font-size:12.5px;color:var(--muted)}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:11.5px;padding:2px 8px;border-radius:99px;background:var(--fill);color:var(--muted)}
+.tag.good{background:var(--brand-soft);color:var(--accent)}
+.tag.warn{color:var(--warn)}
+.note{font-size:12.5px;color:var(--muted);margin-top:18px;line-height:1.55}
+.alert{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--warn-soft);color:var(--warn);font-size:14px}
+.err{margin-top:16px;padding:14px;border-radius:14px;background:var(--bg2);color:var(--bad)}
+.skel{height:108px;border-radius:16px;background:linear-gradient(90deg,var(--bg2),var(--fill),var(--bg2));background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+/* tracked */
+.thead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.thead h1{margin:0}
+.thead .btn{margin-inline-start:auto}
+.tcard{padding:14px;border-radius:16px;background:var(--card);box-shadow:var(--shadow);border:1px solid var(--sep);display:grid;gap:8px}
+.tcard.hit{border-color:var(--good);box-shadow:0 0 0 1px var(--good)}
+.ttop{display:flex;gap:10px;align-items:baseline;justify-content:space-between}
+.tq{font-weight:700;font-size:17px;min-width:0;overflow-wrap:anywhere}
+.tnow{font-size:24px;font-weight:800;white-space:nowrap}
+.tstats{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.tstats b{color:var(--text);font-weight:600}
+.spark{width:100%;height:56px;display:block}
+.tact{display:flex;gap:6px 16px;flex-wrap:wrap;align-items:center}
+.tact .field{flex:0 1 190px;height:36px;border-radius:10px}
+.empty{padding:28px 18px;border-radius:16px;background:var(--bg2);color:var(--muted);text-align:center}
+.foot{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px;font-size:13px}
+@media (max-width:380px){ h1{font-size:24px} .card{grid-template-columns:68px 1fr} .card img,.ph{width:68px;height:68px} }
+@media (prefers-reduced-motion:reduce){ .skel{animation:none} }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <div class="appicon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg></div>
+    <div class="logo">צייד</div>
+    <div class="src">נתונים חיים · eBay</div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-search" aria-selected="true" data-view="search">חיפוש</button>
+    <button class="tab" role="tab" id="tab-track" aria-selected="false" data-view="track">במעקב <span class="count num" id="tcount" hidden>0</span></button>
+  </div>
+
+  <section id="view-search">
+    <h1>מה מחפשים?</h1>
+    <p class="lead">כתוב שם של מוצר חדש. אראה את המחיר הסופי עד הדלת בישראל, כולל משלוח ומע״מ, ואפשר לעקוב אחרי המחיר לאורך זמן.</p>
+    <form class="form" id="f">
+      <label class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg>
+        <input id="q" type="search" placeholder="למשל: airpods pro 2, kindle paperwhite" autocomplete="off" dir="auto" required minlength="2">
+      </label>
+      <div class="row">
+        <label class="field"><span>היעד שלי ₪</span><input id="target" type="number" inputmode="numeric" min="1" placeholder="לא חובה"></label>
+        <label class="field"><span>להסתיר מתחת ל-₪</span><input id="min" type="number" inputmode="numeric" min="1" placeholder="לא חובה"></label>
+      </div>
+      <button class="btn" id="go" type="submit">חפש</button>
+    </form>
+    <div id="out"></div>
+  </section>
+
+  <section id="view-track" hidden>
+    <div class="thead">
+      <h1>במעקב</h1>
+      <button class="btn small sec" id="checkAll" type="button">בדוק הכל עכשיו</button>
+    </div>
+    <p class="lead">המחיר הזול ביותר עד הדלת לכל חיפוש. נבדק אוטומטית כשהעמוד פתוח, אם עברו יותר מ-3 שעות מהבדיקה האחרונה.</p>
+    <div id="tout"></div>
+    <div class="foot">
+      <button class="link" id="exportBtn" type="button">שמור גיבוי לקובץ</button>
+      <label class="link" for="importFile" style="cursor:pointer">שחזר מגיבוי</label>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+    <p class="note">רשימת המעקב שמורה בדפדפן הזה בלבד. אם תנקה את נתוני הדפדפן היא תימחק, לכן כדאי לשמור גיבוי מדי פעם.</p>
+  </section>
+</div>
+
+<script>
+const API = 'https://imyhdvtdsotawkvyipbq.supabase.co/functions/v1/api';
+const STORE_KEY = 'tzayad.v1';
+const STALE_MS = 3 * 60 * 60 * 1000;      // auto-check tracked items older than 3h
+const FX_STALE_DAYS = 3;
+const MAX_POINTS = 300;
+
+const $ = (s) => document.querySelector(s);
+const ils = (n) => '₪' + Math.round(n).toLocaleString('en-US');
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const REASONS = { accessory: 'אביזרים/חלקים', wrong_model: 'דגם אחר', counterfeit_risk: 'חשד לזיוף', new_seller: 'מוכר חדש', low_rating: 'דירוג נמוך',
+  not_new: 'לא חדש', wrong_variant: 'גרסה אחרת', multi_variant: 'כמה דגמים במודעה אחת', bait: 'פיתיון', off_platform: 'תשלום מחוץ ל-eBay',
+  no_price_or_shipping: 'בלי משלוח לישראל', out_of_stock: 'אזל', below_your_minimum: 'מתחת למינימום שלך', too_cheap: 'זול בצורה חשודה' };
+const COUNTRY = { US: 'ארה״ב', GB: 'בריטניה', DE: 'גרמניה', JP: 'יפן', AU: 'אוסטרליה', IT: 'איטליה', FR: 'צרפת', CN: 'סין', HK: 'הונג קונג', PL: 'פולין', ES: 'ספרד', NL: 'הולנד', CA: 'קנדה', IL: 'ישראל' };
+const fmtTime = (t) => new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }).format(new Date(t));
+const ago = (t) => {
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return 'עכשיו'; if (m < 60) return `לפני ${m} דק׳`;
+  const h = Math.round(m / 60); if (h < 24) return `לפני ${h} שע׳`;
+  return `לפני ${Math.round(h / 24)} ימים`;
+};
+
+/* ---------- storage ---------- */
+function load() {
+  try { const d = JSON.parse(localStorage.getItem(STORE_KEY)); if (d && Array.isArray(d.items)) return d; } catch {}
+  return { items: [] };
+}
+let store = load();
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); return true; } catch { return false; } }
+const keyOf = (q, cat, min) => [q.trim().toLowerCase(), cat || '', min || ''].join('|');
+
+/* ---------- API ---------- */
+async function callApi({ q, cat, min }) {
+  const p = new URLSearchParams({ q });
+  if (cat) p.set('cat', cat);
+  if (min > 0) p.set('min', min);
+  let r;
+  try { r = await fetch(API + '?' + p, { headers: { Accept: 'application/json' } }); }
+  catch { throw new Error('אין חיבור לשרת החיפוש. בדוק את האינטרנט ונסה שוב.'); }
+  let j = {}; try { j = await r.json(); } catch {}
+  if (!r.ok) throw new Error(j.error === 'rate_limited' ? 'יותר מדי חיפושים בדקה. נסה שוב עוד רגע.' : j.error === 'source_unavailable' ? 'eBay לא ענה כרגע. נסה שוב.' : 'שגיאה מהשרת: ' + (j.error || r.status));
+  return j;
+}
+function fxWarning(j) {
+  const m = /^(\d{4}-\d{2}-\d{2})/.exec(j?.fx?.asOf || '');
+  if (!m) return '';
+  const days = Math.floor((Date.now() - Date.parse(m[1] + 'T00:00:00Z')) / 86400000);
+  return days > FX_STALE_DAYS ? `שימו לב: השרת משתמש בשער דולר מ-${m[1]} (לפני ${days} ימים), כך שהמחירים בשקלים עשויים להיות לא מדויקים.` : '';
+}
+
+/* ---------- search view ---------- */
+let state = { cat: null, last: null, params: null };
+$('#f').addEventListener('submit', (e) => { e.preventDefault(); state.cat = null; runSearch(); });
+$('#target').addEventListener('input', () => state.last && renderSearch(state.last));
+
+async function runSearch() {
+  const q = $('#q').value.trim(); if (q.length < 2) return;
+  const min = Number($('#min').value) || null;
+  $('#go').disabled = true;
+  $('#out').innerHTML = '<div class="list"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>';
+  try {
+    const j = await callApi({ q, cat: state.cat, min });
+    state.last = j; state.params = { q, cat: state.cat, min };
+    renderSearch(j);
+  } catch (e) {
+    $('#out').innerHTML = `<div class="err">${esc(e.message)}</div>`;
+  } finally { $('#go').disabled = false; }
+}
+
+function renderSearch(j) {
+  const target = Number($('#target').value) || null;
+  const best = j.offers[0];
+  const tracked = state.params && store.items.find((i) => i.key === keyOf(state.params.q, j.category?.id || state.params.cat, state.params.min));
+  let html = '';
+  if (j.categories?.length > 1) {
+    html += '<div class="chips">' + j.categories.map((c) => `<button class="chip" type="button" data-cat="${esc(c.id)}" aria-pressed="${j.category?.id === c.id}">${esc(c.name)}</button>`).join('') + '</div>';
+  }
+  html += '<div class="summary">';
+  if (best) {
+    html += `<div class="meta">הכי זול שמצאתי, עד הדלת:</div><div class="big num">${ils(best.totalILS)}${best.customsMayApply ? '+' : ''}</div>`;
+    if (target) {
+      const gap = Math.round((best.totalILS - target) / target * 100);
+      html += best.totalILS <= target ? `<div class="verdict ok">✓ בתוך היעד שלך (${ils(target)})</div>` : `<div class="verdict far">${gap}% מעל היעד שלך (${ils(target)})</div>`;
+    }
+  } else {
+    html += `<div class="verdict">לא מצאתי אף מודעה שעוברת את הסינון.</div>`;
+  }
+  const ex = Object.entries(j.excluded || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${REASONS[k] || k} ${n}`).join(' · ');
+  html += `<div class="meta">${j.returned} מודעות נבדקו ב-eBay · ${j.eligible} עברו${ex ? ' · סוננו: ' + esc(ex) : ''}</div>`;
+  html += `<div class="meta">נבדק ${fmtTime(j.checkedAt)}${j.category?.name ? ' · קטגוריה: ' + esc(j.category.name) : ''}</div>`;
+  html += `<div class="sumrow">${tracked
+    ? `<span class="tag good">✓ במעקב</span><button class="link" type="button" id="goTrack">לרשימת המעקב</button>`
+    : `<button class="btn small" type="button" id="trackBtn">עקוב אחרי המחיר</button><span class="meta">אבדוק שוב ואשמור כל שינוי</span>`}</div>`;
+  html += '</div>';
+  const fxw = fxWarning(j); if (fxw) html += `<div class="alert">${esc(fxw)}</div>`;
+
+  html += '<div class="list">' + j.offers.map((o) => offerCard(o, target)).join('') + '</div>';
+  html += `<p class="note">נבדק רק eBay, לא כל השוק. מחירים מומרים לשקלים לפי שער ${esc(j.fx?.usdToIls)}${j.fx?.asOf ? ' (' + esc(j.fx.asOf) + ')' : ''}. מע״מ ${Math.round((j.rules?.vatRate ?? .18) * 100)}% מחושב על מוצר מעל $${esc(j.rules?.vatFreeUSD)}; מעל $${esc(j.rules?.customsFlagUSD)} ייתכן מכס/מס קנייה שלא חושב (מסומן +). בחיפוש חופשי אין התחייבות שזה בדיוק הדגם: בדוק את הכותרת. שלם רק בתוך eBay.</p>`;
+  $('#out').innerHTML = html;
+  document.querySelectorAll('.chip').forEach((b) => b.addEventListener('click', () => { state.cat = b.dataset.cat; runSearch(); }));
+  $('#trackBtn')?.addEventListener('click', () => { addTracked(j); renderSearch(j); });
+  $('#goTrack')?.addEventListener('click', () => show('track'));
+}
+
+function offerCard(o, target) {
+  const inT = target && o.totalILS <= target;
+  const tags = [
+    inT ? '<span class="tag good">בתוך היעד</span>' : '',
+    o.topRated ? '<span class="tag good">Top Rated</span>' : '',
+    o.seller?.feedbackPct ? `<span class="tag">מוכר ${esc(o.seller.feedbackPct)}% · ${Number(o.seller.feedbackScore).toLocaleString('en-US')} דירוגים</span>` : '',
+    o.country ? `<span class="tag">נשלח מ${esc(COUNTRY[o.country] || o.country)}</span>` : '',
+    o.customsMayApply ? '<span class="tag warn">ייתכן מכס נוסף</span>' : '',
+  ].join('');
+  return `<article class="card">
+    ${o.image ? `<img src="${esc(o.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<div class="ph"></div>'}
+    <div>
+      <div class="t">${esc(o.title)}</div>
+      <div class="price num">${ils(o.totalILS)}${o.customsMayApply ? '+' : ''} <span class="bd">עד הדלת</span></div>
+      <div class="bd num">מוצר ${ils(o.itemILS)} + משלוח ${ils(o.shipILS)}${o.vatILS ? ' + מע״מ ' + ils(o.vatILS) : ' · בלי מע״מ'}</div>
+      <div class="tags">${tags}</div>
+      <a class="link" href="${esc(o.url)}" target="_blank" rel="noopener">לצפייה ב-eBay ←</a>
+    </div></article>`;
+}
+
+/* ---------- tracking ---------- */
+function pointFrom(j) {
+  const b = j.offers[0];
+  return { t: Date.parse(j.checkedAt) || Date.now(), best: b ? b.totalILS : null, plus: !!b?.customsMayApply,
+    title: b?.title || '', url: b?.url || '', image: b?.image || '', eligible: j.eligible ?? 0, fx: j.fx?.usdToIls ?? null };
+}
+function addTracked(j) {
+  const p = state.params;
+  const cat = j.category?.id || p.cat || null;
+  const key = keyOf(p.q, cat, p.min);
+  if (store.items.some((i) => i.key === key)) return;
+  store.items.unshift({ id: Date.now().toString(36), key, q: p.q, cat, catName: j.category?.name || '', min: p.min,
+    target: Number($('#target').value) || null, created: Date.now(), history: [pointFrom(j)], lastErr: null });
+  if (!save()) alertSaveFailed();
+  updateCount();
+}
+function alertSaveFailed() {
+  $('#out').insertAdjacentHTML('afterbegin', '<div class="err">הדפדפן לא מאפשר לשמור נתונים (אולי מצב גלישה פרטית), אז המעקב לא יישמר.</div>');
+}
+function updateCount() {
+  const n = store.items.length; $('#tcount').hidden = !n; $('#tcount').textContent = n;
+}
+
+let checking = false;
+async function checkItem(item) {
+  try {
+    const j = await callApi({ q: item.q, cat: item.cat, min: item.min });
+    item.history.push(pointFrom(j));
+    if (item.history.length > MAX_POINTS) item.history.splice(0, item.history.length - MAX_POINTS);
+    item.lastErr = null; item.fxWarn = fxWarning(j);
+  } catch (e) { item.lastErr = e.message; item.lastTry = Date.now(); }
+  save();
+}
+async function checkMany(items) {
+  if (checking || !items.length) return;
+  checking = true; $('#checkAll').disabled = true;
+  for (let k = 0; k < items.length; k++) {
+    const it = items[k];
+    it.busy = true; renderTracked();
+    await checkItem(it);
+    it.busy = false; renderTracked();
+    if (k < items.length - 1) await new Promise((r) => setTimeout(r, 2500)); // be gentle with the rate limit
+  }
+  checking = false; $('#checkAll').disabled = false;
+}
+function lastT(it) { return Math.max(it.history.at(-1)?.t || 0, it.lastTry || 0); }
+function autoCheck() { checkMany(store.items.filter((i) => Date.now() - lastT(i) > STALE_MS)); }
+$('#checkAll').addEventListener('click', () => checkMany([...store.items]));
+
+function spark(hist) {
+  const pts = hist.filter((h) => h.best != null);
+  if (pts.length < 2) return '<div class="meta">הגרף יופיע אחרי הבדיקה הבאה.</div>';
+  const W = 300, H = 56, pad = 5;
+  const t0 = pts[0].t, t1 = pts.at(-1).t || t0 + 1;
+  const vals = pts.map((p) => p.best); let lo = Math.min(...vals), hi = Math.max(...vals);
+  if (hi === lo) { hi += 1; lo -= 1; }
+  // RTL page, but time runs left→right like any price chart
+  const x = (t) => pad + (W - 2 * pad) * ((t - t0) / Math.max(1, t1 - t0));
+  const y = (v) => pad + (H - 2 * pad) * (1 - (v - lo) / (hi - lo));
+  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.t).toFixed(1)},${y(p.best).toFixed(1)}`).join('');
+  const last = pts.at(-1);
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="גרף מחיר: מ-${ils(lo)} עד ${ils(hi)}" style="direction:ltr">
+    <path d="${d}L${x(last.t).toFixed(1)},${H}L${x(t0).toFixed(1)},${H}Z" fill="var(--brand-soft)" stroke="none"/>
+    <path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+    <circle cx="${x(last.t).toFixed(1)}" cy="${y(last.best).toFixed(1)}" r="3.5" fill="var(--accent)"/>
+  </svg>`;
+}
+
+function renderTracked() {
+  updateCount();
+  if (!store.items.length) {
+    $('#tout').innerHTML = '<div class="empty">עוד לא עוקבים אחרי כלום.<br>חפש מוצר ולחץ <b>עקוב אחרי המחיר</b>.</div>';
+    return;
+  }
+  // keep a target field the user is typing in from being re-rendered away
+  const active = document.activeElement?.dataset?.target;
+  $('#tout').innerHTML = '<div class="list">' + store.items.map((it) => {
+    const pts = it.history.filter((h) => h.best != null);
+    const now = it.history.at(-1), prev = pts.length > 1 ? pts.at(-2) : null, first = pts[0];
+    const cur = now?.best;
+    const low = pts.length ? Math.min(...pts.map((p) => p.best)) : null;
+    let change = '';
+    if (cur != null && prev) {
+      const d = cur - prev.best;
+      change = d === 0 ? '<span>ללא שינוי מהבדיקה הקודמת</span>' : `<span class="${d < 0 ? 'down' : 'up'}">${d < 0 ? '▼' : '▲'} ${ils(Math.abs(d))} מהבדיקה הקודמת</span>`;
+    }
+    const hit = it.target && cur != null && cur <= it.target;
+    return `<article class="tcard${hit ? ' hit' : ''}">
+      <div class="ttop">
+        <div class="tq" dir="auto">${esc(it.q)}${it.catName ? ` <span class="meta">· ${esc(it.catName)}</span>` : ''}</div>
+        <div class="tnow num">${cur != null ? ils(cur) + (now.plus ? '+' : '') : '—'}</div>
+      </div>
+      <div class="tstats num">
+        ${change}
+        ${low != null ? `<span>הכי נמוך: <b>${ils(low)}</b></span>` : ''}
+        ${first && first !== now ? `<span>בהתחלה: <b>${ils(first.best)}</b></span>` : ''}
+        ${it.target ? `<span class="${hit ? 'ok' : 'far'}">${hit ? '✓ בתוך היעד' : 'יעד'} ${ils(it.target)}</span>` : ''}
+      </div>
+      ${spark(it.history)}
+      ${cur == null && now ? '<div class="meta">בבדיקה האחרונה לא נמצאה מודעה שעוברת את הסינון.</div>' : ''}
+      ${it.lastErr ? `<div class="meta up">הבדיקה האחרונה נכשלה: ${esc(it.lastErr)}</div>` : ''}
+      ${it.fxWarn ? `<div class="meta far">${esc(it.fxWarn)}</div>` : ''}
+      <div class="meta">${it.busy ? 'בודק עכשיו…' : `נבדק ${ago(lastT(it))} · ${it.history.length} בדיקות`}</div>
+      <div class="tact">
+        ${now?.url ? `<a class="link" href="${esc(now.url)}" target="_blank" rel="noopener">למודעה הזולה ←</a>` : ''}
+        <button class="link" type="button" data-act="check" data-id="${it.id}" ${checking ? 'disabled' : ''}>בדוק עכשיו</button>
+        <label class="field"><span>יעד ₪</span><input type="number" inputmode="numeric" min="1" data-target="${it.id}" id="tgt-${it.id}" value="${it.target ?? ''}" placeholder="לא חובה"></label>
+        <button class="link danger" type="button" data-act="del" data-id="${it.id}">הסר</button>
+      </div>
+    </article>`;
+  }).join('') + '</div>';
+  if (active) document.getElementById('tgt-' + active)?.focus();
+}
+$('#tout').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const it = store.items.find((i) => i.id === b.dataset.id); if (!it) return;
+  if (b.dataset.act === 'check') checkMany([it]);
+  if (b.dataset.act === 'del') {
+    if (b.dataset.confirm) { store.items = store.items.filter((i) => i !== it); save(); renderTracked(); }
+    else { b.dataset.confirm = '1'; b.textContent = 'ללחוץ שוב כדי להסיר'; setTimeout(() => { if (b.isConnected) { delete b.dataset.confirm; b.textContent = 'הסר'; } }, 4000); }
+  }
+});
+$('#tout').addEventListener('change', (e) => {
+  const id = e.target.dataset?.target; if (!id) return;
+  const it = store.items.find((i) => i.id === id); if (!it) return;
+  it.target = Number(e.target.value) || null; save(); renderTracked();
+});
+
+/* ---------- backup ---------- */
+$('#exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(store, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `tzayad-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+});
+$('#importFile').addEventListener('change', async (e) => {
+  const f = e.target.files?.[0]; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!Array.isArray(d.items)) throw 0;
+    const have = new Set(store.items.map((i) => i.key));
+    d.items.forEach((i) => { if (i && i.key && Array.isArray(i.history) && !have.has(i.key)) store.items.push(i); });
+    save(); renderTracked();
+  } catch { $('#tout').insertAdjacentHTML('afterbegin', '<div class="err">הקובץ הזה הוא לא גיבוי של צייד.</div>'); }
+  e.target.value = '';
+});
+
+/* ---------- tabs ---------- */
+function show(view) {
+  const v = view === 'track' ? 'track' : 'search';
+  $('#view-search').hidden = v !== 'search'; $('#view-track').hidden = v !== 'track';
+  document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.view === v)));
+  if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v);
+  if (v === 'track') { renderTracked(); autoCheck(); }
+}
+document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => show(t.dataset.view)));
+window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+
+updateCount();
+show(location.hash.slice(1) || 'search');
+autoCheck();
+setInterval(autoCheck, 15 * 60 * 1000);
+</script>
+</body>
+</html>
