@@ -63,6 +63,9 @@ h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:4px 0;line-height
 .link.danger{color:var(--bad)}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
 .chip{border:1px solid var(--sep);background:var(--card);border-radius:99px;padding:6px 12px;font-size:13px}
+.storelink{text-decoration:none;color:var(--accent);font-weight:600}
+.compare{display:grid;gap:6px;margin-top:14px}
+.compare .chips{margin:0}
 .chip[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
 .summary{margin:16px 0 6px;padding:16px;border-radius:16px;background:var(--bg2);display:grid;gap:4px}
 .big{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
@@ -247,6 +250,7 @@ function renderSearch(j) {
     ? `<span class="tag good">✓ במעקב</span><button class="link" type="button" id="goTrack">לרשימת המעקב</button>`
     : `<button class="btn small" type="button" id="trackBtn">עקוב אחרי המחיר</button><span class="meta">אבדוק שוב ואשמור כל שינוי</span>`}</div>`;
   html += '</div>';
+  html += compareLinks(state.params?.q || j.q);
   const fxw = fxWarning(j); if (fxw) html += `<div class="alert">${esc(fxw)}</div>`;
 
   html += '<div class="list">' + j.offers.map((o) => offerCard(o, target)).join('') + '</div>';
@@ -255,6 +259,24 @@ function renderSearch(j) {
   document.querySelectorAll('.chip').forEach((b) => b.addEventListener('click', () => { state.cat = b.dataset.cat; runSearch(); }));
   $('#trackBtn')?.addEventListener('click', () => { addTracked(j); renderSearch(j); });
   $('#goTrack')?.addEventListener('click', () => show('track'));
+}
+
+/* Other stores: no API access yet, so open the same search on their site. */
+const STORES = [
+  { name: 'Google Shopping', url: (q) => `https://www.google.com/search?tbm=shop&gl=il&hl=iw&q=${q}` },
+  { name: 'Zap', url: (q) => `https://www.zap.co.il/search.aspx?keyword=${q}` },
+  { name: 'AliExpress', url: (q) => `https://www.aliexpress.com/wholesale?SearchText=${q}` },
+  { name: 'Amazon', url: (q) => `https://www.amazon.com/s?k=${q}` },
+  { name: 'KSP', url: (q) => `https://www.google.com/search?q=${q}+site%3Aksp.co.il` },
+  { name: 'Ivory', url: (q) => `https://www.google.com/search?q=${q}+site%3Aivory.co.il` },
+  { name: 'Bug', url: (q) => `https://www.google.com/search?q=${q}+site%3Abug.co.il` },
+];
+function compareLinks(q) {
+  if (!q) return '';
+  const e = encodeURIComponent(q);
+  return `<div class="compare"><div class="meta">השווה את אותו חיפוש גם ב:</div><div class="chips">` +
+    STORES.map((s) => `<a class="chip storelink" href="${esc(s.url(e))}" target="_blank" rel="noopener">${esc(s.name)} ↗</a>`).join('') +
+    `</div><div class="meta">נפתח באתר החנות. המחירים שם לא כוללים בהכרח משלוח ומע״מ לישראל, והם לא נשמרים במעקב.</div></div>`;
 }
 
 function offerCard(o, target) {
